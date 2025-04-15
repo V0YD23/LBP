@@ -1,0 +1,189 @@
+## 🆕 What’s New in This Design?
+
+### 📡 Embedded Feed Antenna
+- Traditional TAs use a separate feed antenna, usually placed away from the main surface.
+- In this design, the feed antenna is **embedded into the beam-focusing surface**, reducing size along the boresight (main beam direction) by **50%**.
+
+### 🪞 Reflector Placement
+- A **metallic reflector** is added behind the surface to bounce signals from the embedded antenna.
+- This setup makes it appear like the antenna is still at the traditional focal point.
+- The **distance from reflector to surface is D/4**, where:
+  - `F` = focal point
+  - `D` = largest TA dimension
+- The resulting **F/D ratio = 0.5**, providing a solid balance of size and performance.
+
+---
+
+## ⚙️ Challenges and Solutions in Feed Antenna Design
+
+### 🔧 1. Fabricating Feed Antenna + Surface Together
+- Normally made as two parts, which complicates production.
+- The innovation: **fabricate both using PCB technology** on the same substrate.
+- This simplifies the process and reduces material variety.
+
+### 🔄 2. Adding Beam Switching
+- Traditional TAs have just **one fixed feed antenna**, so they can’t switch beams dynamically.
+- This design uses **multiple embedded patch antennas**.
+  - 🔹 These are arranged efficiently to preserve beam-focusing area.
+  - 🔹 A **MASW-011199 switch** + **coplanar waveguides with ground (CPWG)** is used to select which patch is active.
+
+---
+
+## 🚀 Why Does This Matter?
+
+✅ **Compact Design**: Embedding and reflecting reduces physical size without losing function.
+
+✅ **Simpler Manufacturing**: PCB fabrication allows one-step production of the feed and surface.
+
+✅ **Dynamic Beam Switching**: Multiple patches + switching enable beam direction changes on demand.
+
+---
+
+🧠 **Bottom Line**:
+This design modernizes transmitarray antennas by cutting size, streamlining production, and adding smart features like beam switching—ideal for next-gen wireless, automotive, and radar systems.
+
+
+
+### **Surface Composition and Functionality**
+
+1. **Patch Antennas on the Surface**:
+   - The surface of the transmitarray contains **multiple patch antennas** that are used for feeding and beam switching.
+   - These patch antennas are designed to radiate electromagnetic waves and are integrated into the same surface that manipulates the waves to form focused beams.
+   - Each patch antenna can be selectively activated (using switches) to enable beam switching, allowing the antenna to steer its beam in different directions.
+
+2. **Remaining Surface Area**:
+   - The remaining area of the surface is composed of **unit cells**, which are small elements responsible for manipulating the phase of electromagnetic waves.
+   - These unit cells ensure that the waves from the feed antennas are focused and collimated (made parallel) in a specific direction.
+
+3. **Unit Cells in Detail**:
+   - Each unit cell is designed to provide a specific phase shift to the electromagnetic waves passing through it.
+   - The phase shift is carefully calculated so that all waves combine coherently in the desired direction, forming a high-gain, focused beam.
+   - Unit cells can be made using different configurations, such as patches, slots, or multi-layer structures, depending on the design requirements.
+
+---
+
+### **Role of the Reflector**
+
+- A **metallic reflector** is placed behind the transmitarray surface at a reduced distance (D/4), where $$ D $$ is the largest dimension of the transmitarray.
+- This reflector redirects the signals from the patch antennas back toward the surface. By doing so, it creates a virtual effect where it seems like there’s a feed antenna at a traditional focal distance.
+- This clever use of reflection helps reduce the overall size of the antenna while maintaining its performance.
+
+---
+
+### **Key Points About This Design**
+
+1. **Integration of Patch Antennas**:
+   - The patch antennas are embedded directly into the surface instead of being placed separately at a focal distance. This reduces size and eliminates complex supporting structures.
+
+2. **Beam Switching Capability**:
+   - Multiple patch antennas on the surface allow dynamic beam switching by activating different patches as needed.
+   - Switches (e.g., MASW-011199) control which patch antenna is active at any time.
+
+3. **Efficient Use of Space**:
+   - While integrating multiple patch antennas reduces some available space for unit cells, their arrangement is optimized to minimize this impact.
+   - The remaining unit cells still provide precise phase control for focusing beams effectively.
+
+---
+
+### **Summary**
+
+The entire transmitarray surface combines:
+- **Patch antennas** for feeding and beam switching,
+- **Unit cells** for phase manipulation and focusing,
+- A **reflector** behind it to redirect signals and simulate a virtual feed antenna at a traditional focal distance.
+
+This design achieves a compact, low-profile structure with advanced capabilities like dynamic beam steering while maintaining high efficiency.
+
+
+
+
+
+
+
+This section explains the technical design of the **unit cell**, **patch antenna**, and **switching system** used in the proposed transmitarray antenna (TA). Here's a simpler breakdown:
+
+---
+
+### **Unit Cell Design**
+
+1. **Purpose**:
+   - The unit cells are small elements on the TA surface that manipulate the phase of electromagnetic waves passing through them.
+   - They ensure that signals from the feed antennas combine coherently to form a focused beam in the desired direction.
+
+2. **Key Features**:
+   - These unit cells were designed and optimized for a frequency of **24.125 GHz**.
+   - They were fabricated on a **Taconic substrate**, which has:
+     - A permittivity ($$ \varepsilon_r $$) of 3.43 (helps control how electromagnetic waves propagate).
+     - A very low dielectric loss tangent ($$ \tan \delta = 0.0018 $$) for minimal signal loss.
+     - A thickness of 0.254 mm (thin design for compactness).
+
+3. **Performance**:
+   - Simulations showed that each unit cell could achieve a full **360° phase shift** at 24.125 GHz, which is critical for precise beam focusing.
+   - The transmission loss was less than **0.5 dB**, meaning the unit cells efficiently pass signals with minimal power reduction.
+
+4. **Simulation Tools**:
+   - The design was tested using **CST Microwave Studio**, a software tool for simulating electromagnetic behavior.
+   - Periodic boundary conditions were applied during simulations to mimic real-world wave propagation.
+
+---
+
+### **Patch Antenna Design**
+
+1. **Purpose**:
+   - Patch antennas embedded into the TA surface act as feed antennas, radiating signals toward the unit cells and reflector.
+
+2. **Design Details**:
+   - The patch antennas were also fabricated on the same Taconic substrate as the unit cells, allowing simultaneous production on a single PCB (printed circuit board).
+   - The patches were fed using **U-shaped slots** in the center ground plane, which improved their performance at 24.125 GHz.
+
+3. **Performance**:
+   - Simulations of the patch antennas showed good results in terms of signal parameters ($$ S $$-parameters) and radiation patterns, ensuring efficient signal transmission and coverage.
+
+---
+
+### **Switching System**
+
+1. **Beam Switching Capability**:
+   - To enable dynamic beam steering, multiple patch antennas were connected to switches that control which antenna is active at any time.
+   - The switches used were **MASW-011199**, which are compact and efficient microwave switches.
+
+2. **Feeding Network**:
+   - Each group of four patch antennas is fed by one port and controlled by one switch.
+   - This arrangement allows selective activation of different patch antennas to steer the beam in various directions.
+
+3. **Testing and Optimization**:
+   - An evaluation board was designed to test the switches and ensure proper matching (alignment between components for minimal signal loss).
+   - The test results showed transmission losses between 2.15 dB and 2.74 dB at 24.125 GHz across different output ports, which matched expectations based on the switch datasheet.
+   - Minor variations in results across ports were attributed to manufacturing differences.
+
+---
+
+### **Summary of Design**
+
+- The unit cells manipulate wave phases with high precision, achieving full 360° phase shifts while minimizing signal loss.
+- Patch antennas embedded into the TA surface radiate signals efficiently at 24.125 GHz, using optimized feeding mechanisms.
+- A switching system enables dynamic beam steering by selectively activating groups of patch antennas via compact microwave switches.
+
+This design integrates all components seamlessly into a single PCB, ensuring compactness, efficiency, and advanced functionality like beam switching for modern applications.
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
