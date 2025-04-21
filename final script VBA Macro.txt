@@ -1,0 +1,832 @@
+' new_new
+
+Sub Main ()
+
+
+'## Merged Block - use template: Antenna - Planar_1.cfg
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+'set the units
+With Units
+    .SetUnit "Length", "mm"
+    .SetUnit "Frequency", "GHz"
+    .SetUnit "Voltage", "V"
+    .SetUnit "Resistance", "Ohm"
+    .SetUnit "Inductance", "nH"
+    .SetUnit "Temperature",  "degC"
+    .SetUnit "Time", "ns"
+    .SetUnit "Current", "A"
+    .SetUnit "Conductance", "S"
+    .SetUnit "Capacitance", "pF"
+End With
+
+ThermalSolver.AmbientTemperature "0"
+
+'----------------------------------------------------------------------------
+
+'set the frequency range
+Solver.FrequencyRange "20", "30"
+
+'----------------------------------------------------------------------------
+
+Plot.DrawBox True
+
+With Background
+     .Type "Normal"
+     .Epsilon "1.0"
+     .Mu "1.0"
+     .XminSpace "0.0"
+     .XmaxSpace "0.0"
+     .YminSpace "0.0"
+     .YmaxSpace "0.0"
+     .ZminSpace "0.0"
+     .ZmaxSpace "0.0"
+End With
+
+With Boundary
+     .Xmin "expanded open"
+     .Xmax "expanded open"
+     .Ymin "expanded open"
+     .Ymax "expanded open"
+     .Zmin "expanded open"
+     .Zmax "expanded open"
+     .Xsymmetry "none"
+     .Ysymmetry "none"
+     .Zsymmetry "none"
+End With
+
+' optimize mesh settings for planar structures
+
+With Mesh
+     .MergeThinPECLayerFixpoints "True"
+     .RatioLimit "20"
+     .AutomeshRefineAtPecLines "True", "6"
+     .FPBAAvoidNonRegUnite "True"
+     .ConsiderSpaceForLowerMeshLimit "False"
+     .MinimumStepNumber "5"
+     .AnisotropicCurvatureRefinement "True"
+     .AnisotropicCurvatureRefinementFSM "True"
+End With
+
+With MeshSettings
+     .SetMeshType "Hex"
+     .Set "RatioLimitGeometry", "20"
+     .Set "EdgeRefinementOn", "1"
+     .Set "EdgeRefinementRatio", "6"
+End With
+
+With MeshSettings
+     .SetMeshType "HexTLM"
+     .Set "RatioLimitGeometry", "20"
+End With
+
+With MeshSettings
+     .SetMeshType "Tet"
+     .Set "VolMeshGradation", "1.5"
+     .Set "SrfMeshGradation", "1.5"
+End With
+
+' change mesh adaption scheme to energy
+' 		(planar structures tend to store high energy
+'     	 locally at edges rather than globally in volume)
+
+MeshAdaption3D.SetAdaptionStrategy "Energy"
+
+' switch on FD-TET setting for accurate farfields
+
+FDSolver.ExtrudeOpenBC "True"
+
+PostProcess1D.ActivateOperation "vswr", "true"
+PostProcess1D.ActivateOperation "yz-matrices", "true"
+
+With FarfieldPlot
+	.ClearCuts ' lateral=phi, polar=theta
+	.AddCut "lateral", "0", "1"
+	.AddCut "lateral", "90", "1"
+	.AddCut "polar", "90", "1"
+End With
+
+'----------------------------------------------------------------------------
+
+Dim sDefineAt As String
+sDefineAt = "20;25;30"
+Dim sDefineAtName As String
+sDefineAtName = "20;25;30"
+Dim sDefineAtToken As String
+sDefineAtToken = "f="
+Dim aFreq() As String
+aFreq = Split(sDefineAt, ";")
+Dim aNames() As String
+aNames = Split(sDefineAtName, ";")
+
+Dim nIndex As Integer
+For nIndex = LBound(aFreq) To UBound(aFreq)
+
+Dim zz_val As String
+zz_val = aFreq (nIndex)
+Dim zz_name As String
+zz_name = sDefineAtToken & aNames (nIndex)
+
+' Define E-Field Monitors
+With Monitor
+    .Reset
+    .Name "e-field ("& zz_name &")"
+    .Dimension "Volume"
+    .Domain "Frequency"
+    .FieldType "Efield"
+    .MonitorValue  zz_val
+    .Create
+End With
+
+Next
+
+'----------------------------------------------------------------------------
+
+With MeshSettings
+     .SetMeshType "Tet"
+     .Set "Version", 1%
+End With
+
+With Mesh
+     .MeshType "Tetrahedral"
+End With
+
+'set the solver type
+ChangeSolverType("HF Frequency Domain")
+
+'----------------------------------------------------------------------------
+
+'## Merged Block - define material: Copper (pure)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Material
+     .Reset
+     .Name "Copper (pure)"
+     .Folder ""
+     .FrqType "all"
+     .Type "Lossy metal"
+     .MaterialUnit "Frequency", "GHz"
+     .MaterialUnit "Geometry", "mm"
+     .MaterialUnit "Time", "s"
+     .MaterialUnit "Temperature", "Kelvin"
+     .Mu "1.0"
+     .Sigma "5.96e+007"
+     .Rho "8930.0"
+     .ThermalType "Normal"
+     .ThermalConductivity "401.0"
+     .SpecificHeat "390", "J/K/kg"
+     .MetabolicRate "0"
+     .BloodFlow "0"
+     .VoxelConvection "0"
+     .MechanicsType "Isotropic"
+     .YoungsModulus "120"
+     .PoissonsRatio "0.33"
+     .ThermalExpansionRate "17"
+     .ReferenceCoordSystem "Global"
+     .CoordSystemType "Cartesian"
+     .NLAnisotropy "False"
+     .NLAStackingFactor "1"
+     .NLADirectionX "1"
+     .NLADirectionY "0"
+     .NLADirectionZ "0"
+     .FrqType "static"
+     .Type "Normal"
+     .SetMaterialUnit "Hz", "mm"
+     .Epsilon "1"
+     .Mu "1.0"
+     .Kappa "5.96e+007"
+     .TanD "0.0"
+     .TanDFreq "0.0"
+     .TanDGiven "False"
+     .TanDModel "ConstTanD"
+     .KappaM "0"
+     .TanDM "0.0"
+     .TanDMFreq "0.0"
+     .TanDMGiven "False"
+     .TanDMModel "ConstTanD"
+     .DispModelEps "None"
+     .DispModelMu "None"
+     .DispersiveFittingSchemeEps "Nth Order"
+     .DispersiveFittingSchemeMu "Nth Order"
+     .UseGeneralDispersionEps "False"
+     .UseGeneralDispersionMu "False"
+     .Colour "1", "1", "0"
+     .Wireframe "False"
+     .Reflection "False"
+     .Allowoutline "True"
+     .Transparentoutline "False"
+     .Transparency "0"
+     .Create
+End With
+
+'## Merged Block - define pml specials
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Boundary
+     .ReflectionLevel "0.0001" 
+     .MinimumDistanceType "Fraction" 
+     .MinimumDistancePerWavelengthNewMeshEngine "4" 
+     .MinimumDistanceReferenceFrequencyType "User" 
+     .FrequencyForMinimumDistance "24.125" 
+     .SetAbsoluteDistance "0.0" 
+End With
+
+'## Merged Block - define boundaries
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Boundary
+     .Xmin "electric"
+     .Xmax "electric"
+     .Ymin "magnetic"
+     .Ymax "magnetic"
+     .Zmin "expanded open"
+     .Zmax "expanded open"
+     .Xsymmetry "none"
+     .Ysymmetry "none"
+     .Zsymmetry "none"
+     .ApplyInAllDirections "False"
+     .OpenAddSpaceFactor "0.5"
+End With
+
+'## Merged Block - define port: 1
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Port 
+     .Reset 
+     .PortNumber "1" 
+     .Label ""
+     .Folder ""
+     .NumberOfModes "1"
+     .AdjustPolarization "False"
+     .PolarizationAngle "0.0"
+     .ReferencePlaneDistance "0"
+     .TextSize "50"
+     .TextMaxLimit "1"
+     .Coordinates "Full"
+     .Orientation "zmax"
+     .PortOnBound "True"
+     .ClipPickedPortToBound "False"
+     .Xrange "-1.75", "1.75"
+     .Yrange "-1.75", "1.75"
+     .Zrange "3.6686575958549", "3.6686575958549"
+     .XrangeAdd "0.0", "0.0"
+     .YrangeAdd "0.0", "0.0"
+     .ZrangeAdd "0.0", "0.0"
+     .SingleEnded "False"
+     .WaveguideMonitor "False"
+     .Create 
+End With
+
+'## Merged Block - define port: 2
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Port 
+     .Reset 
+     .PortNumber "2" 
+     .Label ""
+     .Folder ""
+     .NumberOfModes "1"
+     .AdjustPolarization "False"
+     .PolarizationAngle "0.0"
+     .ReferencePlaneDistance "0"
+     .TextSize "50"
+     .TextMaxLimit "1"
+     .Coordinates "Full"
+     .Orientation "zmin"
+     .PortOnBound "True"
+     .ClipPickedPortToBound "False"
+     .Xrange "-1.75", "1.75"
+     .Yrange "-1.75", "1.75"
+     .Zrange "-6.6686575958549", "-6.6686575958549"
+     .XrangeAdd "0.0", "0.0"
+     .YrangeAdd "0.0", "0.0"
+     .ZrangeAdd "0.0", "0.0"
+     .SingleEnded "False"
+     .WaveguideMonitor "False"
+     .Create 
+End With
+
+'## Merged Block - define port: 3
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Port 
+     .Reset 
+     .PortNumber "3" 
+     .Label ""
+     .Folder ""
+     .NumberOfModes "1"
+     .AdjustPolarization "False"
+     .PolarizationAngle "0.0"
+     .ReferencePlaneDistance "0"
+     .TextSize "50"
+     .TextMaxLimit "1"
+     .Coordinates "Full"
+     .Orientation "zmin"
+     .PortOnBound "True"
+     .ClipPickedPortToBound "False"
+     .Xrange "-1.75", "1.75"
+     .Yrange "-1.75", "1.75"
+     .Zrange "-6.6686575958549", "-6.6686575958549"
+     .XrangeAdd "0.0", "0.0"
+     .YrangeAdd "0.0", "0.0"
+     .ZrangeAdd "0.0", "0.0"
+     .SingleEnded "False"
+     .WaveguideMonitor "False"
+     .Create 
+End With
+
+'## Merged Block - define frequency domain solver parameters
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Mesh.SetCreator "High Frequency" 
+
+With FDSolver
+     .Reset 
+     .SetMethod "Tetrahedral", "General purpose" 
+     .OrderTet "Second" 
+     .OrderSrf "First" 
+     .Stimulation "All", "All" 
+     .ResetExcitationList 
+     .AutoNormImpedance "False" 
+     .NormingImpedance "50" 
+     .ModesOnly "False" 
+     .ConsiderPortLossesTet "True" 
+     .SetShieldAllPorts "False" 
+     .AccuracyHex "1e-6" 
+     .AccuracyTet "1e-4" 
+     .AccuracySrf "1e-3" 
+     .LimitIterations "False" 
+     .MaxIterations "0" 
+     .SetCalcBlockExcitationsInParallel "True", "True", "" 
+     .StoreAllResults "False" 
+     .StoreResultsInCache "False" 
+     .UseHelmholtzEquation "True" 
+     .LowFrequencyStabilization "True" 
+     .Type "Auto" 
+     .MeshAdaptionHex "False" 
+     .MeshAdaptionTet "True" 
+     .AcceleratedRestart "True" 
+     .FreqDistAdaptMode "Distributed" 
+     .NewIterativeSolver "True" 
+     .TDCompatibleMaterials "False" 
+     .ExtrudeOpenBC "True" 
+     .SetOpenBCTypeHex "Default" 
+     .SetOpenBCTypeTet "Default" 
+     .AddMonitorSamples "True" 
+     .CalcPowerLoss "True" 
+     .CalcPowerLossPerComponent "False" 
+     .SetKeepSolutionCoefficients "MonitorsAndMeshAdaptation" 
+     .UseDoublePrecision "False" 
+     .UseDoublePrecision_ML "True" 
+     .MixedOrderSrf "False" 
+     .MixedOrderTet "False" 
+     .PreconditionerAccuracyIntEq "0.15" 
+     .MLFMMAccuracy "Default" 
+     .MinMLFMMBoxSize "0.3" 
+     .UseCFIEForCPECIntEq "True" 
+     .UseEnhancedCFIE2 "True" 
+     .UseFastRCSSweepIntEq "false" 
+     .UseSensitivityAnalysis "False" 
+     .UseEnhancedNFSImprint "True" 
+     .UseFastDirectFFCalc "True" 
+     .RemoveAllStopCriteria "Hex"
+     .AddStopCriterion "All S-Parameters", "0.01", "2", "Hex", "True"
+     .AddStopCriterion "Reflection S-Parameters", "0.01", "2", "Hex", "False"
+     .AddStopCriterion "Transmission S-Parameters", "0.01", "2", "Hex", "False"
+     .RemoveAllStopCriteria "Tet"
+     .AddStopCriterion "All S-Parameters", "0.01", "2", "Tet", "True"
+     .AddStopCriterion "Reflection S-Parameters", "0.01", "2", "Tet", "False"
+     .AddStopCriterion "Transmission S-Parameters", "0.01", "2", "Tet", "False"
+     .AddStopCriterion "All Probes", "0.05", "2", "Tet", "True"
+     .RemoveAllStopCriteria "Srf"
+     .AddStopCriterion "All S-Parameters", "0.01", "2", "Srf", "True"
+     .AddStopCriterion "Reflection S-Parameters", "0.01", "2", "Srf", "False"
+     .AddStopCriterion "Transmission S-Parameters", "0.01", "2", "Srf", "False"
+     .SweepMinimumSamples "3" 
+     .SetNumberOfResultDataSamples "1001" 
+     .SetResultDataSamplingMode "Automatic" 
+     .SweepWeightEvanescent "1.0" 
+     .AccuracyROM "1e-4" 
+     .AddSampleInterval "", "", "1", "Automatic", "True" 
+     .AddSampleInterval "", "", "", "Automatic", "False" 
+     .MPIParallelization "False"
+     .UseDistributedComputing "False"
+     .NetworkComputingStrategy "RunRemote"
+     .NetworkComputingJobCount "3"
+     .UseParallelization "True"
+     .MaxCPUs "1024"
+     .MaximumNumberOfCPUDevices "2"
+     .HardwareAcceleration "False"
+     .MaximumNumberOfGPUs "1"
+End With
+
+With IESolver
+     .Reset 
+     .UseFastFrequencySweep "True" 
+     .UseIEGroundPlane "False" 
+     .SetRealGroundMaterialName "" 
+     .CalcFarFieldInRealGround "False" 
+     .RealGroundModelType "Auto" 
+     .PreconditionerType "Auto" 
+     .ExtendThinWireModelByWireNubs "False" 
+     .ExtraPreconditioning "False" 
+End With
+
+With IESolver
+     .SetFMMFFCalcStopLevel "0" 
+     .SetFMMFFCalcNumInterpPoints "6" 
+     .UseFMMFarfieldCalc "True" 
+     .SetCFIEAlpha "0.500000" 
+     .LowFrequencyStabilization "False" 
+     .LowFrequencyStabilizationML "True" 
+     .Multilayer "False" 
+     .SetiMoMACC_I "0.0001" 
+     .SetiMoMACC_M "0.0001" 
+     .DeembedExternalPorts "True" 
+     .SetOpenBC_XY "True" 
+     .OldRCSSweepDefintion "False" 
+     .SetRCSOptimizationProperties "True", "100", "0.00001" 
+     .SetAccuracySetting "Medium" 
+     .CalculateSParaforFieldsources "True" 
+     .ModeTrackingCMA "True" 
+     .NumberOfModesCMA "3" 
+     .StartFrequencyCMA "-1.0" 
+     .SetAccuracySettingCMA "Default" 
+     .FrequencySamplesCMA "0" 
+     .SetMemSettingCMA "Auto" 
+     .CalculateModalWeightingCoefficientsCMA "True" 
+     .DetectThinDielectrics "True" 
+     .UseLegacyRadiatedPowerCalc "False" 
+End With
+
+'## Merged Block - delete port: port3
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Port.Delete "3"
+
+'## Merged Block - define material: Taconic RF-35 (lossy)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+With Material
+     .Reset
+     .Name "Taconic RF-35 (lossy)"
+     .Folder ""
+     .FrqType "all"
+     .Type "Normal"
+     .SetMaterialUnit "GHz", "mm"
+     .Epsilon "3.5"
+     .Mu "1.0"
+     .Kappa "0.0"
+     .TanD "0.0025"
+     .TanDFreq "10.0"
+     .TanDGiven "True"
+     .TanDModel "ConstTanD"
+     .KappaM "0.0"
+     .TanDM "0.0"
+     .TanDMFreq "0.0"
+     .TanDMGiven "False"
+     .TanDMModel "ConstKappa"
+     .DispModelEps "None"
+     .DispModelMu "None"
+     .DispersiveFittingSchemeEps "General 1st"
+     .DispersiveFittingSchemeMu "General 1st"
+     .UseGeneralDispersionEps "False"
+     .UseGeneralDispersionMu "False"
+     .Rho "0.0"
+     .ThermalType "Normal"
+     .ThermalConductivity "0.24"
+     .SetActiveMaterial "all"
+     .Colour "0.94", "0.82", "0.76"
+     .Wireframe "False"
+     .Transparency "0"
+     .Create
+End With
+
+' Script to generate a 29x29 matrix of unit cells with RR values from Excel
+' The cells will be spaced to avoid intersection
+
+' Global parameters
+Dim cellH, rectH, side, Z, H, spacing
+Dim objExcel, objWorkbook, objWorksheet
+Dim excelFile, row, col, RR, xpos, ypos
+Dim outerRadiusTop, innerRadiusTop, halfRR, componentName
+
+' Base parameters (used for all cells)
+cellH = 0.018   ' Cell height
+rectH = 0.254   ' Rectangle height
+side = 3.5      ' Side length
+Z = 0.272       ' Z offset
+H = 3.0         ' Total height
+spacing = 4.0   ' Spacing between cells (adjust as needed to prevent intersection)
+
+' Excel file path - CHANGE THIS TO YOUR ACTUAL EXCEL FILE PATH
+excelFile = "C:\Users\Yash\Desktop\LBP\phase_data_output.xlsx"
+
+' Create Excel object
+Set objExcel = CreateObject("Excel.Application")
+objExcel.Visible = False  ' Keep Excel hidden
+
+' Open the workbook
+Set objWorkbook = objExcel.Workbooks.Open(excelFile)
+Set objWorksheet = objWorkbook.Worksheets(1)  ' Use first worksheet
+
+' Read RR values from Excel and create cells
+For row = 1 To 29
+    For col = 1 To 29
+        ' Read RR value from Excel
+        RR = objWorksheet.Cells(row, col).Value
+
+        ' Calculate position for this cell
+        xpos = (col - 1) * spacing
+        ypos = (row - 1) * spacing
+
+        ' Calculate dimensions based on RR
+        outerRadiusTop = (1.22 + 0.39 * RR) / 2
+        innerRadiusTop = (2 - 0.45 * RR) / 2
+        halfRR = RR / 2
+
+        ' Create component name for this cell
+        componentName = "cell_" & row & "_" & col
+
+        ' Create new component for this cell
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        Component.New componentName
+
+        ' Define cylinder: c1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "c1"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(outerRadiusTop)
+             .InnerRadius CStr(innerRadiusTop)
+             .Axis "z"
+             .Zrange CStr(Z), CStr(cellH+Z)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+
+        ' Define brick: rect1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "rect1"
+             .Component componentName
+             .Material "Vacuum"
+             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
+             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
+             .Zrange CStr(cellH+Z), CStr(cellH+rectH+Z)
+             .Create
+        End With
+
+        ' Define brick: wing1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing1"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-outerRadiusTop), CStr(xpos-side/2)
+             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
+             .Zrange CStr(Z), CStr(cellH+Z)
+             .Create
+        End With
+
+        ' Define brick: wing2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing2"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
+             .Yrange CStr(ypos-outerRadiusTop), CStr(ypos-side/2)
+             .Zrange CStr(Z), CStr(cellH+Z)
+             .Create
+        End With
+
+        ' Define brick: wing3
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing3"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
+             .Yrange CStr(ypos+outerRadiusTop), CStr(ypos+side/2)
+             .Zrange CStr(Z), CStr(cellH+Z)
+             .Create
+        End With
+
+        ' Define brick: wing4
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing4"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos+outerRadiusTop), CStr(xpos+side/2)
+             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
+             .Zrange CStr(Z), CStr(cellH+Z)
+             .Create
+        End With
+
+        ' Define brick: rect2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "rect2"
+             .Component componentName
+             .Material "Vacuum"
+             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
+             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
+             .Zrange CStr(Z), CStr(-rectH+Z)
+             .Create
+        End With
+
+        ' Define cylinder: upper1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "upper1"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(halfRR)
+             .InnerRadius "0"
+             .Axis "z"
+             .Zrange CStr(-rectH+Z), CStr(-cellH-rectH+Z)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+
+        ' Define cylinder: lower1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "lower1"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(halfRR)
+             .InnerRadius "0"
+             .Axis "z"
+             .Zrange CStr(cellH+rectH+Z), CStr(2*cellH+rectH+Z)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+
+        ' Define cylinder: lower2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "lower2"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(halfRR)
+             .InnerRadius "0"
+             .Axis "z"
+             .Zrange CStr(-H), CStr(-H-cellH)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+
+        ' Define brick: solid1
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "solid1"
+             .Component componentName
+             .Material "Vacuum"
+             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
+             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
+             .Zrange CStr(-H-cellH), CStr(-H-cellH-rectH)
+             .Create
+        End With
+
+        ' Define cylinder: solid2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "solid2"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(outerRadiusTop)
+             .InnerRadius CStr(innerRadiusTop)
+             .Axis "z"
+             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+
+        ' Define brick: wing5
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing5"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-outerRadiusTop), CStr(xpos-side/2)
+             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
+             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
+             .Create
+        End With
+
+        ' Define brick: wing6
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing6"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos+outerRadiusTop), CStr(xpos+side/2)
+             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
+             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
+             .Create
+        End With
+
+        ' Define brick: wing7
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing7"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
+             .Yrange CStr(ypos+outerRadiusTop), CStr(ypos+side/2)
+             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
+             .Create
+        End With
+
+        ' Define brick: wing8
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "wing8"
+             .Component componentName
+             .Material "Copper (pure)"
+             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
+             .Yrange CStr(ypos-outerRadiusTop), CStr(ypos-side/2)
+             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
+             .Create
+        End With
+
+        ' Define brick: upper2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Brick
+             .Reset
+             .Name "upper2"
+             .Component componentName
+             .Material "Vacuum"
+             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
+             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
+             .Zrange CStr(-H-Z-cellH), CStr(-H-2*Z)
+             .Create
+        End With
+
+        ' Define cylinder: upper_2
+        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
+        With Cylinder
+             .Reset
+             .Name "upper_2"
+             .Component componentName
+             .Material "Copper (pure)"
+             .OuterRadius CStr(halfRR)
+             .InnerRadius "0"
+             .Axis "z"
+             .Zrange CStr(-H-2*Z), CStr(-H-2*Z-cellH)
+             .Xcenter CStr(xpos)
+             .Ycenter CStr(ypos)
+             .Segments "0"
+             .Create
+        End With
+    Next col
+Next row
+
+' Clean up Excel objects
+objWorkbook.Close False  ' Close without saving
+objExcel.Quit
+Set objWorksheet = Nothing
+Set objWorkbook = Nothing
+Set objExcel = Nothing
+
+'## Merged Block - change material: component1:rect1 to: Taconic RF-35 (lossy)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Solid.ChangeMaterial "component1:rect1", "Taconic RF-35 (lossy)"
+
+'## Merged Block - change material: component1:rect2 to: Taconic RF-35 (lossy)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Solid.ChangeMaterial "component1:rect2", "Taconic RF-35 (lossy)"
+
+'## Merged Block - change material: component1:rect3 to: Taconic RF-35 (lossy)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Solid.ChangeMaterial "component1:rect3", "Taconic RF-35 (lossy)"
+
+'## Merged Block - change material: component1:rect4 to: Taconic RF-35 (lossy)
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+Solid.ChangeMaterial "component1:rect4", "Taconic RF-35 (lossy)"
+
+'## Merged Block - change solver type
+StartVersionStringOverrideMode "2025.0|34.0.1|20240830" 
+ChangeSolverType "HF Frequency Domain"
+StopVersionStringOverrideMode 
+End Sub
