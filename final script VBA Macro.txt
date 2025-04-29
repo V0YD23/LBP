@@ -507,7 +507,7 @@ rectH = 0.254   ' Rectangle height
 side = 3.5      ' Side length
 Z = 0.272       ' Z offset
 H = 3.0         ' Total height
-spacing = 4.0   ' Spacing between cells (adjust as needed to prevent intersection)
+spacing = 3.5   ' Spacing between cells (adjust as needed to prevent intersection)
 
 ' Excel file path - CHANGE THIS TO YOUR ACTUAL EXCEL FILE PATH
 excelFile = "C:\Users\Yash\Desktop\LBP\phase_data_output.xlsx"
@@ -522,6 +522,7 @@ Set objWorksheet = objWorkbook.Worksheets(1)  ' Use first worksheet
 
 ' Read RR values from Excel and create cells
 For row = 1 To 29
+    If (row = 14 Or row = 15 Or row = 16) Then
     For col = 1 To 29
         ' Read RR value from Excel
         RR = objWorksheet.Cells(row, col).Value
@@ -670,136 +671,8 @@ For row = 1 To 29
              .Segments "0"
              .Create
         End With
-
-        ' Define cylinder: lower2
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Cylinder
-             .Reset
-             .Name "lower2"
-             .Component componentName
-             .Material "Copper (pure)"
-             .OuterRadius CStr(halfRR)
-             .InnerRadius "0"
-             .Axis "z"
-             .Zrange CStr(-H), CStr(-H-cellH)
-             .Xcenter CStr(xpos)
-             .Ycenter CStr(ypos)
-             .Segments "0"
-             .Create
-        End With
-
-        ' Define brick: solid1
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "solid1"
-             .Component componentName
-             .Material "Vacuum"
-             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
-             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
-             .Zrange CStr(-H-cellH), CStr(-H-cellH-rectH)
-             .Create
-        End With
-
-        ' Define cylinder: solid2
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Cylinder
-             .Reset
-             .Name "solid2"
-             .Component componentName
-             .Material "Copper (pure)"
-             .OuterRadius CStr(outerRadiusTop)
-             .InnerRadius CStr(innerRadiusTop)
-             .Axis "z"
-             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
-             .Xcenter CStr(xpos)
-             .Ycenter CStr(ypos)
-             .Segments "0"
-             .Create
-        End With
-
-        ' Define brick: wing5
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "wing5"
-             .Component componentName
-             .Material "Copper (pure)"
-             .Xrange CStr(xpos-outerRadiusTop), CStr(xpos-side/2)
-             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
-             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
-             .Create
-        End With
-
-        ' Define brick: wing6
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "wing6"
-             .Component componentName
-             .Material "Copper (pure)"
-             .Xrange CStr(xpos+outerRadiusTop), CStr(xpos+side/2)
-             .Yrange CStr(ypos-0.2), CStr(ypos+0.2)
-             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
-             .Create
-        End With
-
-        ' Define brick: wing7
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "wing7"
-             .Component componentName
-             .Material "Copper (pure)"
-             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
-             .Yrange CStr(ypos+outerRadiusTop), CStr(ypos+side/2)
-             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
-             .Create
-        End With
-
-        ' Define brick: wing8
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "wing8"
-             .Component componentName
-             .Material "Copper (pure)"
-             .Xrange CStr(xpos-0.2), CStr(xpos+0.2)
-             .Yrange CStr(ypos-outerRadiusTop), CStr(ypos-side/2)
-             .Zrange CStr(-H-Z), CStr(-H-Z-cellH)
-             .Create
-        End With
-
-        ' Define brick: upper2
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Brick
-             .Reset
-             .Name "upper2"
-             .Component componentName
-             .Material "Vacuum"
-             .Xrange CStr(xpos-side/2), CStr(xpos+side/2)
-             .Yrange CStr(ypos-side/2), CStr(ypos+side/2)
-             .Zrange CStr(-H-Z-cellH), CStr(-H-2*Z)
-             .Create
-        End With
-
-        ' Define cylinder: upper_2
-        StartVersionStringOverrideMode "2025.0|34.0.1|20240830"
-        With Cylinder
-             .Reset
-             .Name "upper_2"
-             .Component componentName
-             .Material "Copper (pure)"
-             .OuterRadius CStr(halfRR)
-             .InnerRadius "0"
-             .Axis "z"
-             .Zrange CStr(-H-2*Z), CStr(-H-2*Z-cellH)
-             .Xcenter CStr(xpos)
-             .Ycenter CStr(ypos)
-             .Segments "0"
-             .Create
-        End With
     Next col
+End If
 Next row
 
 ' Clean up Excel objects
